@@ -68,9 +68,9 @@
     "tinyurl": "^1.1.7",
     "totp-generator": "^0.0.13",
     "websocket-stream": "^5.5.2",
-    "ws3-fca": "^1.0.41",
+    "ws3-fca": "latest",
     "yt-search": "^2.12.1",
-    "ytdl-core": "^4.11.5"
+    "ytdl-core": "latest"
   },
   "scripts": {
     "start": "node index.js",
