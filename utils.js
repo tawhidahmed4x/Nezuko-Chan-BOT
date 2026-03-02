@@ -18,42 +18,41 @@ class TaskQueue {
 
 const utils = {
     TaskQueue,
-    colors: {
-        hex: (color) => (text) => text,
-        green: (text) => text,
-        blueBright: (text) => text,
-        yellow: (text) => text,
-        red: (text) => text
-    },
+    colors: { hex: (c) => (t) => t, green: (t) => t, blueBright: (t) => t, yellow: (t) => t, red: (t) => t },
     log: require("./logger/log.js"),
-    logColor: (color, text) => console.log(text),
     getTime: (ts, fmt) => moment(ts).tz("Asia/Dhaka").format(fmt),
     formatNumber: (n) => Number(n).toLocaleString("en-US"),
     createOraDots: (text) => new ora({ text, spinner: "dots" }),
     getPrefix: (threadID) => global.GoatBot?.config?.prefix || "/",
     getType: (v) => Object.prototype.toString.call(v).slice(8, -1),
     convertTime: (ms) => moment.duration(ms).format("h:mm:ss"),
-    removeHomeDir: (p) => p.replace(process.cwd(), ""),
     getText: require("./languages/makeFuncGetLangs.js"),
     
-    // --- DATABASE FIX ---
-    database: { data: { threads: [], users: [], global: [] } },
+    // --- DATABASE STRUCTURE FIX ---
+    database: { 
+        data: { threads: [], users: [], global: [] },
+        allThreadData: [],
+        allUserData: []
+    },
+    
     message: (api, event) => ({
         send: (f, cb) => api.sendMessage(f, event.threadID, cb),
         reply: (f, cb) => api.sendMessage(f, event.threadID, cb, event.messageID),
-        unsend: (id) => api.unsendMessage(id),
-        reaction: (e, id) => api.setMessageReaction(e, id, () => {}, true)
+        unsend: (id) => api.unsendMessage(id)
     }),
     downloadFile: async (url, p) => {
         const res = await axios.get(url, { responseType: "arraybuffer" });
         fs.writeFileSync(p, Buffer.from(res.data));
         return p;
-    },
-    drive: { getUrlDownload: (id) => `https://docs.google.com/uc?id=${id}&export=download` }
+    }
 };
 
-// Global initialization to prevent "undefined" errors
-global.db = global.db || { allThreadData: [], allUserData: [], database: { data: { threads: [], users: [] } } };
+// Global DB সেটআপ - এটা না থাকলে 'database of undefined' আসবে
+global.db = { 
+    allThreadData: [], 
+    allUserData: [], 
+    database: { data: { threads: [], users: [] } } 
+};
 global.utils = utils;
 
 module.exports = utils;
