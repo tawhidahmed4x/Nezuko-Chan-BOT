@@ -1,4 +1,6 @@
+// set bash title
 process.stdout.write("TawHid_Bbz 👑");
+
 const fs = require("fs-extra");
 const path = require("path");
 const login = require("ws3-fca");
@@ -17,26 +19,48 @@ async function startBot() {
             console.log(colors.hex("#00FF00")(" ✅ [SYSTEM] Login with Render Secret."));
         } else {
             const dirAccount = path.join(process.cwd(), "account.txt");
-            if (fs.existsSync(dirAccount)) appState = JSON.parse(fs.readFileSync(dirAccount, "utf8"));
+            if (fs.existsSync(dirAccount)) {
+                appState = JSON.parse(fs.readFileSync(dirAccount, "utf8"));
+            }
         }
-    } catch (e) { log.err("LOGIN", "AppState Load Failed!"); }
+    } catch (e) { 
+        log.err("LOGIN", "AppState format invalid!"); 
+    }
 
-    if (!appState || appState.length === 0) return log.err("LOGIN", "No AppState found!");
+    if (!appState || appState.length === 0) {
+        return log.err("LOGIN", "No AppState found! Check Render Environment.");
+    }
 
-    login({ appState }, { forceLogin: true, logLevel: "silent" }, async (err, api) => {
-        if (err) return log.err("LOGIN", "Login Failed! Cookie expired.");
+    const loginOptions = {
+        appState: appState,
+        forceLogin: true,
+        logLevel: "silent"
+    };
+
+    login({ appState }, loginOptions, async (err, api) => {
+        if (err) return log.err("LOGIN", `Facebook login failed: ${err.error}`);
 
         console.log(colors.hex("#00FFFF")(" 📥 [LOGIN] Connected with Facebook!"));
         global.GoatBot.fcaApi = api;
         global.GoatBot.botID = api.getCurrentUserID();
 
         try {
+            // Path correctly points to main directory database controller
             const loadDataPath = path.join(process.cwd(), "bot/login/loadData.js");
-            await require(loadDataPath)(api, (c) => c);
+            const loadData = require(loadDataPath);
+            await loadData(api, (c) => c);
+            
             console.log(colors.hex("#FF3399")(line));
             console.log(colors.hex("#00FFCC")(" 🚀 [SUCCESS] Nezuko-Chan is Online Now!"));
             console.log(colors.hex("#FF3399")(line));
-        } catch (e) { log.err("LOAD", "Data Load Error!"); console.log(e); }
+        } catch (e) { 
+            log.err("LOAD", "Data Load Error!"); 
+            console.log(e); 
+        }
     });
 }
+
+// এটি সরাসরি কল করা হচ্ছে যেন বট স্টার্ট হওয়ার সাথে সাথে রান হয়
+startBot();
+
 module.exports = startBot;
