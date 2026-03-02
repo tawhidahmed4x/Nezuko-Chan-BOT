@@ -11,13 +11,7 @@
   },
   "antiInbox": false,
   "language": "en",
-  "adminOnly": {
-    "enable": false,
-    "ignoreCommand": []
-  },
-  "adminBot": [
-    "100092489104821"
-  ],
+  "adminBot": ["100092489104821"],
   "nickNameBot": "Nezuko Chan 🌸",
   "prefix": "!",
   "database": {
@@ -27,25 +21,6 @@
     "autoRefreshThreadInfoFirstTime": true
   },
   "timeZone": "Asia/Dhaka",
-  "credentials": {
-    "gmailAccount": {
-      "email": "",
-      "clientId": "",
-      "clientSecret": "",
-      "refreshToken": "",
-      "apiKey": ""
-    },
-    "gRecaptcha": {
-      "siteKey": "",
-      "secretKey": ""
-    }
-  },
-  "notiWhenListenMqttError": {
-    "gmail": {
-      "enable": false,
-      "emailGetNoti": ""
-    }
-  },
   "dashBoard": {
     "enable": false,
     "port": 3001
@@ -56,11 +31,6 @@
   },
   "autoRestart": {
     "time": 3600000
-  },
-  "autoUptime": {
-    "enable": false,
-    "timeInterval": 180,
-    "url": ""
   },
   "optionsFca": {
     "forceLogin": true,
