@@ -1,120 +1,46 @@
-const { graphQlQueryToJson } = require("graphql-query-to-json");
 const ora = require("ora");
+const path = require("path");
 const { log, getText } = global.utils;
 const { config } = global.GoatBot;
 const databaseType = config.database.type;
 
-// with add null if not found data
-function fakeGraphql(query, data, obj = {}) {
-	if (typeof query != "string" && typeof query != "object")
-		throw new Error(`The "query" argument must be of type string or object, got ${typeof query}`);
-	if (query == "{}" || !data)
-		return data;
-	if (typeof query == "string")
-		query = graphQlQueryToJson(query).query;
-	const keys = query ? Object.keys(query) : [];
-	for (const key of keys) {
-		if (typeof query[key] === 'object') {
-			if (!Array.isArray(data[key]))
-				obj[key] = data.hasOwnProperty(key) ? fakeGraphql(query[key], data[key] || {}, obj[key]) : null;
-			else
-				obj[key] = data.hasOwnProperty(key) ? data[key].map(item => fakeGraphql(query[key], item, {})) : null;
-		}
-		else
-			obj[key] = data.hasOwnProperty(key) ? data[key] : null;
-	}
-	return obj;
-}
-
 module.exports = async function (api) {
 	var threadModel, userModel, dashBoardModel, globalModel, sequelize = null;
-	
-	switch (databaseType.toLowerCase()) {
-		case "mongodb": {
-			const spin = ora({
-				text: getText('indexController', 'connectingMongoDB'),
-				spinner: {
-					interval: 80,
-					frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
-				}
-			});
-			const defaultClearLine = process.stderr.clearLine;
-			process.stderr.clearLine = function () { };
-			spin.start();
-			try {
-				const connectMongoDB = require("../connectDB/connectMongoDB.js");
-				const mongoDB = await connectMongoDB(config.database.uriMongodb);
-				threadModel = mongoDB.threadModel;
-				userModel = mongoDB.userModel;
-				dashBoardModel = mongoDB.dashBoardModel;
-				globalModel = mongoDB.globalModel;
+	const type = (databaseType || "json").toLowerCase();
 
-				process.stderr.clearLine = defaultClearLine;
-				spin.stop();
-				log.info("MONGODB", getText("indexController", "connectMongoDBSuccess"));
-			}
-			catch (err) {
-				process.stderr.clearLine = defaultClearLine;
-				spin.stop();
-				log.err("MONGODB", getText("indexController", "connectMongoDBError"), err);
-				process.exit();
-			}
-			break;
+	if (type === "mongodb") {
+		try {
+			const connectMongoDB = require("../connectDB/connectMongoDB.js");
+			const mongoDB = await connectMongoDB(config.database.uriMongodb);
+			({ threadModel, userModel, dashBoardModel, globalModel } = mongoDB);
+			log.info("MONGODB", "Connected successfully!");
+		} catch (err) {
+			log.err("MONGODB", "Connection error!", err);
+			process.exit();
 		}
-		case "sqlite": {
-			const spin = ora({
-				text: getText('indexController', 'connectingMySQL'),
-				spinner: {
-					interval: 80,
-					frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
-				}
-			});
-			const defaultClearLine = process.stderr.clearLine;
-			process.stderr.clearLine = function () { };
-			spin.start();
-			try {
-				const connectSqlite = require("../connectDB/connectSqlite.js");
-				const sqliteDB = await connectSqlite();
-				
-				threadModel = sqliteDB.threadModel;
-				userModel = sqliteDB.userModel;
-				dashBoardModel = sqliteDB.dashBoardModel;
-				globalModel = sqliteDB.globalModel;
-				sequelize = sqliteDB.sequelize;
-
-				process.stderr.clearLine = defaultClearLine;
-				spin.stop();
-				log.info("SQLITE", getText("indexController", "connectMySQLSuccess"));
-			}
-			catch (err) {
-				process.stderr.clearLine = defaultClearLine;
-				spin.stop();
-				log.err("SQLITE", getText("indexController", "connectMySQLError"), err);
-				process.exit();
-			}
-			break;
+	} else if (type === "sqlite") {
+		try {
+			const connectSqlite = require("../connectDB/connectSqlite.js");
+			const sqliteDB = await connectSqlite();
+			({ threadModel, userModel, dashBoardModel, globalModel, sequelize } = sqliteDB);
+			log.info("SQLITE", "Connected successfully!");
+		} catch (err) {
+			log.err("SQLITE", "Connection error!", err);
+			process.exit();
 		}
-		case "json": {
-			// JSON মোডে কোনো কানেকশন লাগে না, সরাসরি ব্রেক হবে
-			log.info("DATABASE", "Connecting to JSON database...");
-			break;
-		}
-		default:
-			break;
+	} else {
+		log.info("DATABASE", "Connecting to JSON database...");
 	}
 
-	// কন্ট্রোলার লোড করা হচ্ছে
-	const threadsData = await require("./threadsData.js")(databaseType, threadModel, api, fakeGraphql);
-	const usersData = await require("./usersData.js")(databaseType, userModel, api, fakeGraphql);
-	const dashBoardData = await require("./dashBoardData.js")(databaseType, dashBoardModel, fakeGraphql);
-	const globalData = await require("./globalData.js")(databaseType, globalModel, fakeGraphql);
+	// PATH FIX: process.cwd() use kora hoyeche jate main directory theke load hoy
+	const baseDir = path.join(process.cwd(), "database/controller");
+	
+	const threadsData = await require(path.join(baseDir, "threadsData.js"))(databaseType, threadModel, api, (q, d) => d);
+	const usersData = await require(path.join(baseDir, "usersData.js"))(databaseType, userModel, api, (q, d) => d);
+	const dashBoardData = await require(path.join(baseDir, "dashBoardData.js"))(databaseType, dashBoardModel, (q, d) => d);
+	const globalData = await require(path.join(baseDir, "globalData.js"))(databaseType, globalModel, (q, d) => d);
 
-	global.db = {
-		...global.db,
-		threadsData,
-		usersData,
-		dashBoardData,
-		globalData,
-		sequelize
-	};
+	global.db = { ...global.db, threadsData, usersData, dashBoardData, globalData, sequelize };
+
+	return { threadModel, userModel, dashBoardModel, globalModel, threadsData, usersData, dashBoardData, globalData, sequelize };
 };
