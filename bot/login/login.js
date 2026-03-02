@@ -197,7 +197,7 @@ qr.readQrCode = async function (filePath) {
 	return value.result;
 };
 
-const { dirAccount } = global.client;
+const dirAccount = global.client?.dirAccount || "";
 // const { config, configCommands } = global.GoatBot;
 const { facebookAccount } = global.GoatBot.config;
 
