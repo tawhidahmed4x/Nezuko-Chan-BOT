@@ -1,7 +1,7 @@
 const { colors } = require('../func/colors.js');
 const moment = require("moment-timezone");
-const characters = '';
-const getCurrentTime = () => colors.gray(moment().tz("Asia/Ho_Chi_Minh").format("HH:mm:ss DD/MM/YYYY"));
+const characters = '✨'; // বটের লগের শুরুতে একটু শাইন দেওয়ার জন্য
+const getCurrentTime = () => colors.gray(`[${moment().tz("Asia/Dhaka").format("HH:mm:ss DD/MM/YYYY")}]`);
 
 function logError(prefix, message) {
 	if (message === undefined) {
@@ -37,14 +37,14 @@ module.exports = {
 	success: function (prefix, message) {
 		if (message === undefined) {
 			message = prefix;
-			prefix = "SUCCES";
+			prefix = "SUCCESS";
 		}
 		console.log(`${getCurrentTime()} ${colors.cyanBright(`${characters} ${prefix}:`)}`, message);
 	},
 	master: function (prefix, message) {
 		if (message === undefined) {
 			message = prefix;
-			prefix = "MASTER";
+			prefix = "NEZUKO"; // মাস্টার থেকে বদলে বটের নাম দিলাম
 		}
 		console.log(`${getCurrentTime()} ${colors.hex("#eb6734", `${characters} ${prefix}:`)}`, message);
 	},
