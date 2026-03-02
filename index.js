@@ -1,3 +1,14 @@
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('Nezuko Chan is Running! 🌸');
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
 const { spawn } = require("child_process");
 const log = require("./logger/log.js");
 const fs = require("fs-extra");
