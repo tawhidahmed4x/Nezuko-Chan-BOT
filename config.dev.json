@@ -15,7 +15,7 @@
   "nickNameBot": "Nezuko Chan 🌸",
   "prefix": "!",
   "database": {
-    "type": "sqlite",
+    "type": "json",
     "uriMongodb": "",
     "autoSyncWhenStart": false,
     "autoRefreshThreadInfoFirstTime": true
