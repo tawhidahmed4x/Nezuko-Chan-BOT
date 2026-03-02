@@ -24,7 +24,6 @@ function fakeGraphql(query, data, obj = {}) {
 			obj[key] = data.hasOwnProperty(key) ? data[key] : null;
 	}
 	return obj;
-	// i don't know why but it's working by Copilot suggestion :)
 }
 
 module.exports = async function (api) {
@@ -35,26 +34,27 @@ module.exports = async function (api) {
 				text: getText('indexController', 'connectingMongoDB'),
 				spinner: {
 					interval: 80,
-					frames: [
-						'⠋', '⠙', '⠹',
-						'⠸', '⠼', '⠴',
-						'⠦', '⠧', '⠇',
-						'⠏'
-					]
+					frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 				}
 			});
 			const defaultClearLine = process.stderr.clearLine;
 			process.stderr.clearLine = function () { };
 			spin.start();
 			try {
-				var { threadModel, userModel, dashBoardModel, globalModel } = await require("../connectDB/connectMongoDB.js")(config.database.uriMongodb);
-				spin.stop();
+				const connectMongoDB = require("../connectDB/connectMongoDB.js");
+				const mongoDB = await connectMongoDB(config.database.uriMongodb);
+				threadModel = mongoDB.threadModel;
+				userModel = mongoDB.userModel;
+				dashBoardModel = mongoDB.dashBoardModel;
+				globalModel = mongoDB.globalModel;
+
 				process.stderr.clearLine = defaultClearLine;
+				spin.stop();
 				log.info("MONGODB", getText("indexController", "connectMongoDBSuccess"));
 			}
 			catch (err) {
-				spin.stop();
 				process.stderr.clearLine = defaultClearLine;
+				spin.stop();
 				log.err("MONGODB", getText("indexController", "connectMongoDBError"), err);
 				process.exit();
 			}
@@ -65,19 +65,23 @@ module.exports = async function (api) {
 				text: getText('indexController', 'connectingMySQL'),
 				spinner: {
 					interval: 80,
-					frames: [
-						'⠋', '⠙', '⠹',
-						'⠸', '⠼', '⠴',
-						'⠦', '⠧', '⠇',
-						'⠏'
-					]
+					frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 				}
 			});
 			const defaultClearLine = process.stderr.clearLine;
 			process.stderr.clearLine = function () { };
 			spin.start();
 			try {
-				var { threadModel, userModel, dashBoardModel, globalModel, sequelize } = await require("../connectDB/connectSqlite.js")();
+				// FIX: Separating require and call to avoid TypeError
+				const connectSqlite = require("../connectDB/connectSqlite.js");
+				const sqliteDB = await connectSqlite();
+				
+				threadModel = sqliteDB.threadModel;
+				userModel = sqliteDB.userModel;
+				dashBoardModel = sqliteDB.dashBoardModel;
+				globalModel = sqliteDB.globalModel;
+				sequelize = sqliteDB.sequelize;
+
 				process.stderr.clearLine = defaultClearLine;
 				spin.stop();
 				log.info("SQLITE", getText("indexController", "connectMySQLSuccess"));
@@ -101,27 +105,10 @@ module.exports = async function (api) {
 
 	global.db = {
 		...global.db,
-		threadModel,
-		userModel,
-		dashBoardModel,
-		globalModel,
 		threadsData,
 		usersData,
 		dashBoardData,
 		globalData,
 		sequelize
-	};
-
-	return {
-		threadModel,
-		userModel,
-		dashBoardModel,
-		globalModel,
-		threadsData,
-		usersData,
-		dashBoardData,
-		globalData,
-		sequelize,
-		databaseType
 	};
 };
