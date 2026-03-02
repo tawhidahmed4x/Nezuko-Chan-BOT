@@ -28,7 +28,8 @@ function fakeGraphql(query, data, obj = {}) {
 
 module.exports = async function (api) {
 	var threadModel, userModel, dashBoardModel, globalModel, sequelize = null;
-	switch (databaseType) {
+	
+	switch (databaseType.toLowerCase()) {
 		case "mongodb": {
 			const spin = ora({
 				text: getText('indexController', 'connectingMongoDB'),
@@ -72,7 +73,6 @@ module.exports = async function (api) {
 			process.stderr.clearLine = function () { };
 			spin.start();
 			try {
-				// FIX: Separating require and call to avoid TypeError
 				const connectSqlite = require("../connectDB/connectSqlite.js");
 				const sqliteDB = await connectSqlite();
 				
@@ -94,10 +94,16 @@ module.exports = async function (api) {
 			}
 			break;
 		}
+		case "json": {
+			// JSON মোডে কোনো কানেকশন লাগে না, সরাসরি ব্রেক হবে
+			log.info("DATABASE", "Connecting to JSON database...");
+			break;
+		}
 		default:
 			break;
 	}
 
+	// কন্ট্রোলার লোড করা হচ্ছে
 	const threadsData = await require("./threadsData.js")(databaseType, threadModel, api, fakeGraphql);
 	const usersData = await require("./usersData.js")(databaseType, userModel, api, fakeGraphql);
 	const dashBoardData = await require("./dashBoardData.js")(databaseType, dashBoardModel, fakeGraphql);
