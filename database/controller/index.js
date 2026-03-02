@@ -17,20 +17,13 @@ module.exports = async function (api) {
 		({ threadModel, userModel, dashBoardModel, globalModel, sequelize } = sqliteDB);
 	}
 
-	// PATH FIX: Separating require and execution to avoid TypeError
 	const controllerDir = path.join(process.cwd(), "database/controller");
 
-	const threadsDataFunc = require(path.join(controllerDir, "threadsData.js"));
-	const threadsData = await threadsDataFunc(databaseType, threadModel, api, (q, d) => d);
-
-	const usersDataFunc = require(path.join(controllerDir, "usersData.js"));
-	const usersData = await usersDataFunc(databaseType, userModel, api, (q, d) => d);
-
-	const dashBoardDataFunc = require(path.join(controllerDir, "dashBoardData.js"));
-	const dashBoardData = await dashBoardDataFunc(databaseType, dashBoardModel, (q, d) => d);
-
-	const globalDataFunc = require(path.join(controllerDir, "globalData.js"));
-	const globalData = await globalDataFunc(databaseType, globalModel, (q, d) => d);
+	// Logic for JSON Mode
+	const threadsData = await require("./threadsData.js")(databaseType, threadModel, api, (q, d) => d);
+	const usersData = await require("./usersData.js")(databaseType, userModel, api, (q, d) => d);
+	const dashBoardData = await require("./dashBoardData.js")(databaseType, dashBoardModel, (q, d) => d);
+	const globalData = await require("./globalData.js")(databaseType, globalModel, (q, d) => d);
 
 	global.db = { ...global.db, threadsData, usersData, dashBoardData, globalData, sequelize };
 
