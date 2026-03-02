@@ -1,5 +1,5 @@
 // set bash title
-process.stdout.write("MahMUD 🪽");
+process.stdout.write("TawHid_Bbz 👑");
 const defaultRequire = require;
 
 function decode(text) {
@@ -113,8 +113,8 @@ if (subTitle.length > maxWidth) {
 else {
 	subTitleArray.push(subTitle);
 }
-const modified = ("• Modified & Fca fix by MahMUD");
-const srcUrl = ("• Source code: https://github.com/mahmudx7/Hinata-Bot-v3");
+const modified = ("• Modified & Maintained by: TawHid_Bbz");
+const srcUrl = ("• Maintained by: TawHid_Bbz");
 const fakeRelease = ("ALL VERSIONS NOT RELEASED HERE ARE FAKE");
 for (const t of subTitleArray) {
 	const textColor2 = gradient("#9F98E8", "#AFF6CF")(t);
