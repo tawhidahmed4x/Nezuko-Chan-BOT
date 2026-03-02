@@ -4,6 +4,7 @@ const path = require("path");
 const moment = require("moment-timezone");
 const ora = require("ora");
 
+// --- TaskQueue Class ---
 class TaskQueue {
     constructor(callback) { this.queue = []; this.running = null; this.callback = callback; }
     push(task) { this.queue.push(task); if (this.queue.length == 1) this.next(); }
@@ -25,14 +26,19 @@ const utils = {
     getPrefix: (threadID) => global.GoatBot?.config?.prefix || "/",
     getType: (v) => Object.prototype.toString.call(v).slice(8, -1),
     convertTime: (ms) => moment.duration(ms).format("h:mm:ss"),
-    removeHomeDir: (p) => p.replace(process.cwd(), ""),
     getText: require("./languages/makeFuncGetLangs.js"),
-    database: { data: { threads: [], users: [], global: [] } },
+    
+    // --- DATABASE STRUCTURE FIX ---
+    database: { 
+        data: { threads: [], users: [], global: [] },
+        allThreadData: [],
+        allUserData: []
+    },
+    
     message: (api, event) => ({
         send: (f, cb) => api.sendMessage(f, event.threadID, cb),
         reply: (f, cb) => api.sendMessage(f, event.threadID, cb, event.messageID),
-        unsend: (id) => api.unsendMessage(id),
-        reaction: (e, id) => api.setMessageReaction(e, id, () => {}, true)
+        unsend: (id) => api.unsendMessage(id)
     }),
     downloadFile: async (url, p) => {
         const res = await axios.get(url, { responseType: "arraybuffer" });
@@ -41,7 +47,12 @@ const utils = {
     }
 };
 
-global.db = global.db || { allThreadData: [], allUserData: [], database: { data: { threads: [], users: [] } } };
+// Global DB সেটআপ - এটা না থাকলে 'database of undefined' আসবে
+global.db = { 
+    allThreadData: [], 
+    allUserData: [], 
+    database: { data: { threads: [], users: [] } } 
+};
 global.utils = utils;
 
 module.exports = utils;
