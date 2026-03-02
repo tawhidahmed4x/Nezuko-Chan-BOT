@@ -1,7 +1,7 @@
 {
-  "name": "hinataxgoat-v3",
-  "version": "1.6.00",
-  "description": "A simple Bot chat messenger using personal account.",
+  "name": "nezuko-chan-bot",
+  "version": "2.0.0",
+  "description": "A premium Messenger Bot created by Tawhid Ahmed.",
   "main": "index.js",
   "engines": {
     "node": "20.x",
@@ -24,7 +24,7 @@
     "discord-image-generation": "^1.4.25",
     "diskusage-ng": "^1.0.4",
     "eta": "^1.12.3",
-    "express": "^4.18.1",
+    "express": "^4.18.2",
     "express-fileupload": "^1.4.0",
     "express-rate-limit": "^6.5.2",
     "express-session": "^1.17.3",
@@ -73,19 +73,19 @@
     "ytdl-core": "^4.11.5"
   },
   "scripts": {
-    "start": "set NODE_ENV=&& node index.js",
-    "dev": "set NODE_ENV=development&& node index.js",
-    "prod": "set NODE_ENV=production&& node index.js"
+    "start": "node index.js",
+    "dev": "node index.js",
+    "prod": "node index.js"
   },
-  "author": "NTKhang",
+  "author": "Tawhid Ahmed",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ntkhang03/Goat-Bot-V2.git"
+    "url": "git+https://github.com/Mthacks420/Nezuko-Chan-BOT.git"
   },
-  "keywords": [],
+  "keywords": ["messenger-bot", "nezuko", "tawhid-ahmed"],
   "bugs": {
-    "url": "https://github.com/ntkhang03/Goat-Bot-V2/issues"
+    "url": "https://github.com/Mthacks420/Nezuko-Chan-BOT/issues"
   },
-  "homepage": "https://github.com/ntkhang03/Goat-Bot-V2#readme"
+  "homepage": "https://github.com/Mthacks420/Nezuko-Chan-BOT#readme"
 }
