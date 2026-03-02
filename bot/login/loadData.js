@@ -2,15 +2,16 @@ const path = require('path');
 const { log, colors } = global.utils;
 
 module.exports = async function (api) {
-    console.log(colors.hex("#00FFFF")(" 🔄 [DATABASE] TawHid_Bbz, memories loading..."));
+    console.log(colors.hex("#00FFFF")(" 🔄 [DATABASE] Memories loading..."));
     
     try {
-        const controllerPath = path.join(process.cwd(), '/database/controller/index.js');
-        // Separating require to avoid any potential TypeError
-        const controllerFunc = require(controllerPath);
-        await controllerFunc(api);
+        const controllerPath = path.join(process.cwd(), 'database/controller/index.js');
+        const controller = require(controllerPath);
         
-        console.log(colors.hex("#33FF33")(" ✅ [DATABASE] All Data Loaded Successfully!"));
+        // Directly awaiting the controller
+        await controller(api);
+        
+        log.info("DATABASE", "All Data Loaded Successfully!");
     } catch (err) {
         console.error(err);
         throw err;
