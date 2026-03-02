@@ -29,15 +29,21 @@
   "timeZone": "Asia/Dhaka",
   "credentials": {
     "gmailAccount": {
-      "email": "tawhidahmed007x@gmail.com",
-      "clientId": "tawhid-client-id",
-      "clientSecret": "tawhid-secret",
-      "refreshToken": "tawhid-token",
-      "apiKey": "tawhid-api-key"
+      "email": "",
+      "clientId": "",
+      "clientSecret": "",
+      "refreshToken": "",
+      "apiKey": ""
     },
     "gRecaptcha": {
       "siteKey": "",
       "secretKey": ""
+    }
+  },
+  "notiWhenListenMqttError": {
+    "gmail": {
+      "enable": false,
+      "emailGetNoti": ""
     }
   },
   "dashBoard": {
