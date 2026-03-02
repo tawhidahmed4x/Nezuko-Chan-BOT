@@ -1,63 +1,70 @@
 // set bash title
-process.stdout.write("TawHid_Bbz 👑");
-const defaultRequire = require;
+process.stdout.write("TawHid_Bbz 👑 | Nezuko-Chan Bot");
 
-const gradient = defaultRequire("gradient-string");
-const axios = defaultRequire("axios");
-const path = defaultRequire("path");
 const fs = require("fs-extra");
-const login = defaultRequire("ws3-fca");
+const path = require("path");
+const login = require("ws3-fca");
 
-const { log, colors } = global.utils || { log: console, colors: { hex: () => (t) => t } };
-
-// --- TRISHA'S DIR FIX ---
-const dirAccount = (global.client && global.client.dirAccount) ? global.client.dirAccount : path.join(process.cwd(), "account.txt");
+const { log, colors } = global.utils;
 
 async function startBot() {
-    console.log(colors.hex("#f5ab00")("─".repeat(process.stdout.columns || 50)));
+    // স্টাইলিশ ব্যানার
+    const line = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+    console.log(colors.hex("#00FFCC")(line));
+    console.log(colors.hex("#FF3399")(`   👑 OWNER: TawHid_Bbz | NEZUKO-CHAN 🌸`));
+    console.log(colors.hex("#00FFCC")(line));
     
     let appState = [];
     try {
-        if (fs.existsSync(dirAccount)) {
-            appState = JSON.parse(fs.readFileSync(dirAccount, "utf8"));
-        } else if (process.env.APPSTATE) {
+        if (process.env.APPSTATE) {
             appState = JSON.parse(process.env.APPSTATE);
+            console.log(colors.hex("#33FF33")(" ✅ [SYSTEM] AppState Loaded from Render Environment."));
+        } else {
+            const dirAccount = path.join(process.cwd(), "account.txt");
+            if (fs.existsSync(dirAccount)) {
+                appState = JSON.parse(fs.readFileSync(dirAccount, "utf8"));
+                console.log(colors.hex("#33FF33")(" ✅ [SYSTEM] AppState Loaded from account.txt."));
+            }
         }
     } catch (e) {
-        log.err("LOGIN", "AppState load failed. Please check your Environment Variables.");
+        console.log(colors.hex("#FF0000")(" ❌ [ERROR] AppState format is invalid!"));
     }
 
-    if (appState.length === 0) {
-        log.err("LOGIN", "No AppState found! Please add your cookie to Render Env.");
+    if (!appState || appState.length === 0) {
+        console.log(colors.hex("#FFCC00")(" ⚠️ [WARNING] No AppState found. Waiting for login..."));
         return;
     }
 
     const loginOptions = {
-        appState: appState,
+        appState,
         forceLogin: true,
         userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
     };
 
     login({ appState }, loginOptions, async (err, api) => {
         if (err) {
-            log.err("LOGIN", "Facebook login failed! Your cookie might be expired or IP blocked.");
+            console.log(colors.hex("#FF0000")(` ❌ [LOGIN] Failed! Error: ${err.error}`));
             return;
         }
 
-        log.info("LOGIN", "Logged in successfully!");
+        console.log(colors.hex("#00FFFF")(" 📥 [LOGIN] Connection Established Successfully!"));
+        
         global.GoatBot.fcaApi = api;
         global.GoatBot.botID = api.getCurrentUserID();
 
-        const loadDataPath = "./loadData.js";
-        const { threadsData, usersData } = await require(loadDataPath)(api, (c) => c);
-        
-        log.master("SUCCESS", "Nezuko-Chan-Bot is now Running!");
-
-        api.listenMqtt(async (err, event) => {
-            if (err) return;
-            require("../handler/handlerAction.js")(api, null, null, null, null, usersData, threadsData, null, null)(event);
-        });
+        try {
+            console.log(colors.hex("#FF9900")(" 🔄 [DATABASE] Syncing Your Memories..."));
+            const loadData = require("./loadData.js");
+            await loadData(api, (c) => c);
+            
+            console.log(colors.hex("#00FFCC")(line));
+            console.log(colors.hex("#FF3366")(" 🚀 [SUCCESS] Nezuko-Chan is Online Now!"));
+            console.log(colors.hex("#00FFCC")(line));
+        } catch (error) {
+            console.log(colors.hex("#FF0000")(" ❌ [ERROR] Failed to load data controllers."));
+            console.error(error);
+        }
     });
 }
 
-startBot();
+module.exports = startBot;
