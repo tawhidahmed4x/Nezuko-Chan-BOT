@@ -1,23 +1,18 @@
-const chalk = require('chalk');
 const path = require('path');
-const { log, createOraDots, getText } = global.utils;
+const { log, colors } = global.utils;
 
 module.exports = async function (api, createLine) {
-	console.log(chalk.hex("#f5ab00")(createLine("DATABASE")));
-	
-	try {
-		const controllerPath = path.join(process.cwd(), 'src/database/controller/index.js');
-		const controller = await require(controllerPath)(api);
-		
-		log.info('DATABASE', getText('loadData', 'loadThreadDataSuccess', global.db.allThreadData.length));
-		log.info('DATABASE', getText('loadData', 'loadUserDataSuccess', global.db.allUserData.length));
-
-		if (api && global.GoatBot.config.database.autoSyncWhenStart == true) {
-			console.log(chalk.hex("#f5ab00")(createLine("AUTO SYNC")));
-			// Auto sync logic remains same as per your original file
-		}
-	} catch (err) {
-		log.error('DATABASE', "Error during data loading:", err);
-		throw err;
-	}
+    console.log(colors.hex("#66FFFF")(" 📊 [DATA] Loading Threads and Users Information..."));
+    
+    try {
+        const controllerPath = path.join(process.cwd(), 'database/controller/index.js');
+        await require(controllerPath)(api);
+        
+        // সুন্দর করে ডাটা কাউন্ট দেখানো
+        console.log(colors.hex("#FFCCFF")(` ✨ [THREADS] ${global.db.allThreadData.length} groups/chats loaded.`));
+        console.log(colors.hex("#CCFFCC")(` ✨ [USERS] ${global.db.allUserData.length} users recognized.`));
+    } catch (err) {
+        console.log(colors.hex("#FF4D4D")(" ❌ [DATABASE ERROR] Check your JSON files!"));
+        throw err;
+    }
 };
