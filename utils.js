@@ -1,19 +1,10 @@
 const axios = require("axios");
 const fs = require("fs-extra");
 const path = require("path");
-const cheerio = require("cheerio");
 const moment = require("moment-timezone");
-const mimeDB = require("mime-db");
-const _ = require("lodash");
-const { google } = require("googleapis");
 const ora = require("ora");
-const log = require("./logger/log.js");
-const { isHexColor, colors } = require("./func/colors.js");
-const Prism = require("./func/prism.js");
 
-const { config } = global.GoatBot;
-
-// --- TaskQueue Class (এটা ডেটাবেসের জন্য দরকার) ---
+// --- TaskQueue Class ---
 class TaskQueue {
     constructor(callback) { this.queue = []; this.running = null; this.callback = callback; }
     push(task) { this.queue.push(task); if (this.queue.length == 1) this.next(); }
@@ -23,24 +14,30 @@ class TaskQueue {
             this.callback(task, async (err, result) => { this.running = null; this.queue.shift(); this.next(); });
         }
     }
-    length() { return this.queue.length; }
 }
 
 const utils = {
-    TaskQueue, // এটা অবশ্যই থাকতে হবে
-    CustomError: class extends Error { constructor(obj) { super(obj.message || obj); Object.assign(this, obj); } },
-    colors,
-    log,
-    getPrefix: (threadID) => {
-        let prefix = global.GoatBot.config.prefix;
-        const threadData = global.db.allThreadData?.find(t => t.threadID == threadID);
-        if (threadData) prefix = threadData.data.prefix || prefix;
-        return prefix;
+    TaskQueue,
+    colors: {
+        hex: (color) => (text) => text,
+        green: (text) => text,
+        blueBright: (text) => text,
+        yellow: (text) => text,
+        red: (text) => text
     },
-    getTime: (ts, fmt) => moment(ts).tz(config.timeZone).format(fmt),
-    convertTime: (ms) => moment.duration(ms).format("h:mm:ss"),
+    log: require("./logger/log.js"),
+    logColor: (color, text) => console.log(text),
+    getTime: (ts, fmt) => moment(ts).tz("Asia/Dhaka").format(fmt),
     formatNumber: (n) => Number(n).toLocaleString("en-US"),
     createOraDots: (text) => new ora({ text, spinner: "dots" }),
+    getPrefix: (threadID) => global.GoatBot?.config?.prefix || "/",
+    getType: (v) => Object.prototype.toString.call(v).slice(8, -1),
+    convertTime: (ms) => moment.duration(ms).format("h:mm:ss"),
+    removeHomeDir: (p) => p.replace(process.cwd(), ""),
+    getText: require("./languages/makeFuncGetLangs.js"),
+    
+    // --- DATABASE FIX ---
+    database: { data: { threads: [], users: [], global: [] } },
     message: (api, event) => ({
         send: (f, cb) => api.sendMessage(f, event.threadID, cb),
         reply: (f, cb) => api.sendMessage(f, event.threadID, cb, event.messageID),
@@ -52,8 +49,11 @@ const utils = {
         fs.writeFileSync(p, Buffer.from(res.data));
         return p;
     },
-    getText: require("./languages/makeFuncGetLangs.js"),
     drive: { getUrlDownload: (id) => `https://docs.google.com/uc?id=${id}&export=download` }
 };
+
+// Global initialization to prevent "undefined" errors
+global.db = global.db || { allThreadData: [], allUserData: [], database: { data: { threads: [], users: [] } } };
+global.utils = utils;
 
 module.exports = utils;
