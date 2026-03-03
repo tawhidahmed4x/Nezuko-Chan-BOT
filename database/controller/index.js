@@ -11,29 +11,55 @@ module.exports = async function (api) {
         const connectMongoDB = require("../connectDB/connectMongoDB.js");
         const mongoDB = await connectMongoDB(config.database.uriMongodb);
         ({ threadModel, userModel, dashBoardModel, globalModel } = mongoDB);
-    } else if (type === "sqlite") {
+    } 
+    else if (type === "sqlite") {
         const connectSqlite = require("../connectDB/connectSqlite.js");
         const sqliteDB = await connectSqlite();
         ({ threadModel, userModel, dashBoardModel, globalModel, sequelize } = sqliteDB);
     }
 
-    // PATH: Render log anujayi /src/ thakbe
     const ctrlDir = path.join(process.cwd(), "database/controller");
 
-    // We separate require and execution to kill the TypeError
-    const tdFile = require(path.join(ctrlDir, "threadsData.js"));
-    const threadsData = await tdFile(databaseType, threadModel, api, (q, d) => d);
+    async function safeLoad(fileName, ...args) {
+        try {
+            const filePath = path.join(ctrlDir, fileName);
+            const dataFile = require(filePath);
 
-    const udFile = require(path.join(ctrlDir, "usersData.js"));
-    const usersData = await udFile(databaseType, userModel, api, (q, d) => d);
+            if (typeof dataFile === "function") {
+                return await dataFile(...args);
+            } else {
+                console.log(`[DATABASE] ${fileName} is not a function. Skipping...`);
+                return {};
+            }
+        } catch (err) {
+            console.log(`[DATABASE] Failed to load ${fileName}:`, err.message);
+            return {};
+        }
+    }
 
-    const ddFile = require(path.join(ctrlDir, "dashBoardData.js"));
-    const dashBoardData = await ddFile(databaseType, dashBoardModel, (q, d) => d);
+    const threadsData   = await safeLoad("threadsData.js", databaseType, threadModel, api, (q, d) => d);
+    const usersData     = await safeLoad("usersData.js", databaseType, userModel, api, (q, d) => d);
+    const dashBoardData = await safeLoad("dashBoardData.js", databaseType, dashBoardModel, (q, d) => d);
+    const globalData    = await safeLoad("globalData.js", databaseType, globalModel, (q, d) => d);
 
-    const gdFile = require(path.join(ctrlDir, "globalData.js"));
-    const globalData = await gdFile(databaseType, globalModel, (q, d) => d);
+    global.db = { 
+        ...global.db, 
+        threadsData, 
+        usersData, 
+        dashBoardData, 
+        globalData, 
+        sequelize 
+    };
 
-    global.db = { ...global.db, threadsData, usersData, dashBoardData, globalData, sequelize };
-
-    return { threadModel, userModel, dashBoardModel, globalModel, threadsData, usersData, dashBoardData, globalData, sequelize };
+    return { 
+        threadModel, 
+        userModel, 
+        dashBoardModel, 
+        globalModel, 
+        threadsData, 
+        usersData, 
+        dashBoardData, 
+        globalData, 
+        sequelize 
+    };
 };
