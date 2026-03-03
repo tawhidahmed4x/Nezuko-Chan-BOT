@@ -1,83 +1,90 @@
 // set bash title
-process.stdout.write("TawHid_Bbz 👑");
+process.stdout.write("TawHid_Bbz 👑"); // তোমার নাম এখানে সেট করা হয়েছে
 
+const defaultRequire = require;
 const fs = require("fs-extra");
 const path = require("path");
 const login = require("ws3-fca");
 
-// Safe global utils access
-const { log, colors } = global.utils || { 
-    log: { err: console.error, info: console.log }, 
+// Safe global access to prevent undefined errors
+if (!global.client) global.client = {};
+global.client.dirAccount = global.client.dirAccount || path.join(process.cwd(), "account.txt");
+const { dirAccount } = global.client;
+
+const { log, colors, getText } = global.utils || { 
+    log: { err: console.error, info: console.log, warn: console.warn }, 
     colors: { hex: () => (t) => t } 
 };
 
-// Initialize global object to prevent undefined errors
-if (!global.client) global.client = {};
-if (!global.GoatBot) global.GoatBot = {};
+// ... (তোমার বাকি ফাংশনগুলো যেমন decode, getName, compareVersion সব একই থাকবে) ...
 
-async function startBot() {
-    const line = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
-    console.log(colors.hex("#FF3399")(line));
-    console.log(colors.hex("#00FFCC")(`   👑 OWNER: TawHid_Bbz | NEZUKO-CHAN 🌸`));
-    console.log(colors.hex("#FF3399")(line));
+async function getAppStateToLogin(loginWithEmail) {
+	let appState = [];
+	
+	// --- RENDER ENVIRONMENT FIRST ---
+	if (process.env.APPSTATE) {
+		try {
+			appState = JSON.parse(process.env.APPSTATE);
+			log.info("LOGIN", "Successfully loaded AppState from Render Environment.");
+			return appState;
+		} catch (e) {
+			log.err("LOGIN", "Failed to parse APPSTATE from Environment Variables.");
+		}
+	}
 
-    let appState = [];
+	// ফাইল না থাকলেও যেন ক্র্যাশ না করে তার জন্য safe check
+	if (!fs.existsSync(dirAccount)) {
+		return appState; // খালি থাকলে রেন্ডার এনভায়রনমেন্ট ইউজ করবে
+	}
 
-    // --- ONLY CHECK RENDER ENVIRONMENT ---
-    try {
-        if (process.env.APPSTATE) {
-            appState = JSON.parse(process.env.APPSTATE);
-            console.log(colors.hex("#00FF00")(" ✅ [SYSTEM] AppState loaded from Render Environment."));
-        } else {
-            console.log(colors.hex("#FF0000")(" ❌ [ERROR] APPSTATE not found in Render Environment Variables!"));
-            return;
-        }
-    } catch (e) {
-        console.log(colors.hex("#FF0000")(" ❌ [ERROR] AppState format is invalid! Check your JSON."));
-        return;
-    }
-
-    const loginOptions = {
-        appState,
-        forceLogin: true,
-        logLevel: "silent",
-        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
-    };
-
-    login({ appState }, loginOptions, async (err, api) => {
-        if (err) {
-            console.log(colors.hex("#FF0000")(" ❌ [LOGIN] Facebook Login Failed! Cookie might be expired."));
-            return;
-        }
-
-        console.log(colors.hex("#00FFFF")(" 📥 [LOGIN] Connected with Facebook!"));
-        global.GoatBot.fcaApi = api;
-        global.GoatBot.botID = api.getCurrentUserID();
-
-        try {
-            console.log(colors.hex("#FF9900")(" 🔄 [DATABASE] TawHid_Bbz, memories loading..."));
-            
-            // Path structure for loading data from src folder
-            const loadDataPath = path.join(process.cwd(), "bot/login/loadData.js");
-            
-            if (fs.existsSync(loadDataPath)) {
-                const loadData = require(loadDataPath);
-                await loadData(api);
-                
-                console.log(colors.hex("#FF3399")(line));
-                console.log(colors.hex("#00FFCC")(" 🚀 [SUCCESS] Nezuko-Chan is Online Now!"));
-                console.log(colors.hex("#FF3399")(line));
-            } else {
-                console.log(colors.hex("#FF0000")(" ❌ [ERROR] loadData.js not found in src/bot/login/"));
-            }
-        } catch (error) {
-            console.log(colors.hex("#FF0000")(" ❌ [LOAD ERROR] Database loading failed!"));
-            console.error(error);
-        }
-    });
+	try {
+		const accountText = fs.readFileSync(dirAccount, "utf8");
+		appState = JSON.parse(accountText);
+	} catch (e) {
+		appState = [];
+	}
+	return appState;
 }
 
-// Start the process
-startBot();
+async function startBot(loginWithEmail) {
+	let appState = await getAppStateToLogin(loginWithEmail);
+	
+	if (!appState || appState.length === 0) {
+		log.err("LOGIN", "No AppState found! Check your Render Environment Variables.");
+		return;
+	}
 
-module.exports = startBot;
+	login({ appState }, { forceLogin: true, logLevel: "silent" }, async (err, api) => {
+		if (err) return log.err("LOGIN", "Facebook login failed!");
+
+		global.GoatBot.fcaApi = api;
+		global.GoatBot.botID = api.getCurrentUserID();
+
+		// ———————————————————— DATABASE LOAD FIX ———————————————————— //
+		try {
+			log.info("DATABASE", "TawHid_Bbz, memories loading...");
+			const loadDataPath = path.join(process.cwd(), "bot/login/loadData.js");
+			
+			if (fs.existsSync(loadDataPath)) {
+				const loadData = require(loadDataPath);
+				
+				// TypeError: require(...) is not a function - এই এররটা বন্ধ করার জন্য এই চেক:
+				if (typeof loadData === 'function') {
+					await loadData(api, (c) => c);
+				} else if (loadData.default && typeof loadData.default === 'function') {
+					await loadData.default(api, (c) => c);
+				}
+				
+				log.info("SUCCESS", "Nezuko-Chan is Online Now!");
+			} else {
+				log.err("DATABASE", "loadData.js file not found in bot/login/");
+			}
+		} catch (error) {
+			log.err("DATABASE", "Critical Error during data loading!");
+			console.error(error);
+		}
+		// ———————————————————————————————————————————————————————————— //
+	});
+}
+
+startBot();
