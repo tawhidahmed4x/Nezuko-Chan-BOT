@@ -18,7 +18,7 @@ module.exports = async function (api) {
     }
 
     // PATH: Render log anujayi /src/ thakbe
-    const ctrlDir = path.join(process.cwd(), "src/database/controller");
+    const ctrlDir = path.join(process.cwd(), "database/controller");
 
     // We separate require and execution to kill the TypeError
     const tdFile = require(path.join(ctrlDir, "threadsData.js"));
