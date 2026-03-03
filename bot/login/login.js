@@ -197,7 +197,11 @@ qr.readQrCode = async function (filePath) {
 	return value.result;
 };
 
-const { dirAccount } = global.client;
+// --- SAFE DIR FIX ---
+// global.client ডিফাইন না থাকলে এটি একটি খালি অবজেক্ট ধরে নেবে, ফলে এরর আসবে না
+const clientConfig = global.client || {}; 
+const dirAccount = clientConfig.dirAccount || path.join(process.cwd(), "account.txt");
+
 // const { config, configCommands } = global.GoatBot;
 const { facebookAccount } = global.GoatBot.config;
 
