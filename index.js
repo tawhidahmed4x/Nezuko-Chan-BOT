@@ -1,5 +1,6 @@
 const { spawn } = require("child_process");
 const log = require("./logger/log.js");
+const fs = require("fs-extra");
 
 // --- AppState Load Korar Logic (Trishar Special) ---
 if (process.env.APPSTATE) {
