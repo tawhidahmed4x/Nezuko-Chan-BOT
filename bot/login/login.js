@@ -30,7 +30,7 @@ async function startBot() {
         global.GoatBot.botID = api.getCurrentUserID();
 
         try {
-            const loadDataPath = path.join(process.cwd(), "src/bot/login/loadData.js");
+            const loadDataPath = path.join(process.cwd(), "bot/login/loadData.js");
             const loadData = require(loadDataPath);
             await loadData(api);
             console.log(colors.hex("#FF3399")(line));
