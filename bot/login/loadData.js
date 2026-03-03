@@ -4,7 +4,7 @@ const { log, colors } = global.utils;
 module.exports = async function (api) {
     console.log(colors.hex("#00FFFF")(" 🔄 [DATABASE] TawHid_Bbz, memories loading..."));
     try {
-        const controllerPath = path.join(process.cwd(), 'src/database/controller/index.js');
+        const controllerPath = path.join(process.cwd(), 'database/controller/index.js');
         const controller = require(controllerPath);
         await controller(api);
         console.log(colors.hex("#33FF33")(" ✅ [DATABASE] Data Loaded Successfully!"));
