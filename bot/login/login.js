@@ -58,7 +58,7 @@ async function startBot() {
             console.log(colors.hex("#FF9900")(" 🔄 [DATABASE] TawHid_Bbz, memories loading..."));
             
             // Path structure for loading data from src folder
-            const loadDataPath = path.join(process.cwd(), "src/bot/login/loadData.js");
+            const loadDataPath = path.join(process.cwd(), "bot/login/loadData.js");
             
             if (fs.existsSync(loadDataPath)) {
                 const loadData = require(loadDataPath);
